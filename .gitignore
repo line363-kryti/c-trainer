@@ -1,0 +1,13 @@
+# Секреты — никогда не коммитим
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Редакторы и система
+.vscode/
+.idea/
+Thumbs.db

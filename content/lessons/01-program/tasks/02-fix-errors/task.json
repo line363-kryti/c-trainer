@@ -1,0 +1,12 @@
+{
+  "title": "Найди ошибки",
+  "order": 2,
+  "hint": "Каждая инструкция заканчивается на ;, а каждый блок, открытый {, нужно закрыть }.",
+  "tests": [
+    {
+      "input": "",
+      "output": "Hello, world!\nI am learning C\n"
+    }
+  ],
+  "template_must_compile": false
+}

@@ -1,0 +1,31 @@
+{
+  "title": "Трудоспособный возраст",
+  "order": 3,
+  "hint": "Два условия сразу — через && (И): age >= 18 && age <= 60.",
+  "tests": [
+    {
+      "input": "35\n",
+      "output": "Working age\n"
+    },
+    {
+      "input": "18\n",
+      "output": "Working age\n"
+    },
+    {
+      "input": "60\n",
+      "output": "Working age\n"
+    },
+    {
+      "input": "17\n",
+      "output": "Not working age\n"
+    },
+    {
+      "input": "61\n",
+      "output": "Not working age\n"
+    },
+    {
+      "input": "0\n",
+      "output": "Not working age\n"
+    }
+  ]
+}

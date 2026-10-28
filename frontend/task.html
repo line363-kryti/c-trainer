@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Задача — C-тренажёр</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/task.css">
+  <script>try { document.documentElement.dataset.theme = localStorage.getItem("theme") || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"); } catch {}</script>
+  <script src="/vendor/marked.min.js"></script>
+  <script src="/vendor/purify.min.js"></script>
+  <!-- Monaco (~1 МБ) пока с CDN, версия закреплена -->
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
+</head>
+<body>
+  <div class="shell compact">
+    <main class="main">
+      <div class="task-layout">
+        <section class="statement" aria-labelledby="title">
+          <a class="crumb" id="crumb" href="/">
+            <svg class="icon-s" aria-hidden="true"><use href="/img/icons.svg#i-arrow-left"></use></svg><span id="crumb-text">К урокам</span>
+          </a>
+          <h1 id="title">Загружаю задачу</h1>
+          <div class="task-meta">
+            <span class="chip" id="task-status"></span>
+            <span id="tests-count"></span>
+          </div>
+          <article class="prose" id="statement"></article>
+          <div class="hint" id="hint" hidden></div>
+          <div class="solution" id="solution" hidden>
+            <h3>Эталонное решение</h3>
+            <pre><code class="language-c" id="solution-code"></code></pre>
+          </div>
+          <div class="next-row"><a class="btn btn-outline" id="next-task" hidden></a></div>
+        </section>
+
+        <section class="workspace" aria-label="Редактор">
+          <div class="window">
+            <div class="ws-head">
+              <span class="ws-tab"><svg class="icon-s" aria-hidden="true"><use href="/img/icons.svg#i-file-code"></use></svg>main.c</span>
+              <span class="save-state" id="save-state" aria-live="polite"></span>
+              <div class="ws-tools">
+                <button class="tool" id="hint-btn" type="button" hidden><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-bulb"></use></svg><span class="label">Подсказка</span></button>
+                <button class="tool" id="solution-btn" type="button" hidden><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-eye"></use></svg><span class="label">Эталон</span></button>
+                <button class="tool" id="reset-btn" type="button" title="Вернуть заготовку"><svg class="icon" aria-hidden="true"><use href="/img/icons.svg#i-arrow-back-up"></use></svg><span class="label">Сбросить</span></button>
+                <span class="sep" aria-hidden="true"></span>
+                <button class="btn" id="run-btn" type="button" title="Ctrl+Enter"><svg class="icon-s" aria-hidden="true"><use href="/img/icons.svg#i-player-play"></use></svg>Запустить</button>
+                <button class="btn btn-primary" id="check-btn" type="button" title="Ctrl+Shift+Enter"><svg class="icon-s" aria-hidden="true"><use href="/img/icons.svg#i-checks"></use></svg>Проверить</button>
+              </div>
+            </div>
+            <div id="editor"><p class="loading">Загружаю редактор…</p></div>
+            <div class="ws-bottom">
+              <label class="stdin">Ввод для «Запустить»
+                <textarea id="stdin" spellcheck="false" placeholder="2 3"></textarea>
+              </label>
+              <div class="output">
+                <div class="output-title">Результат</div>
+                <div id="output" aria-live="polite"><p class="empty">Запусти код со своим вводом или проверь его на тестах.</p></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="/js/task.js"></script>
+</body>
+</html>

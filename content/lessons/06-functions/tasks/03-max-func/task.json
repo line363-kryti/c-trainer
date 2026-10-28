@@ -1,0 +1,35 @@
+{
+  "title": "Функция max для массива",
+  "order": 3,
+  "hint": "Тот же поиск максимума, что в уроке про массивы, только вместо 5 — параметр size, а в конце return.",
+  "tests": [
+    {
+      "input": "3 9 2 7 5\n",
+      "output": "Maximum: 9\n"
+    },
+    {
+      "input": "1 2 3 4 5\n",
+      "output": "Maximum: 5\n"
+    },
+    {
+      "input": "5 4 3 2 1\n",
+      "output": "Maximum: 5\n"
+    },
+    {
+      "input": "-5 -2 -9 -1 -7\n",
+      "output": "Maximum: -1\n"
+    },
+    {
+      "input": "7 7 7 7 7\n",
+      "output": "Maximum: 7\n"
+    },
+    {
+      "input": "0 0 0 0 0\n",
+      "output": "Maximum: 0\n"
+    },
+    {
+      "input": "100000000 -100000000 100000000 -100000000 100000000\n",
+      "output": "Maximum: 100000000\n"
+    }
+  ]
+}

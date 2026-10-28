@@ -1,0 +1,40 @@
+/* Страница урока */
+.lesson-head { display: grid; gap: 14px; margin-bottom: 32px; }
+.lesson-num { font: 500 14px var(--font-mono); color: var(--lavender); }
+.lesson-head .source { color: var(--text-3); font-size: 14px; margin: 0; }
+
+.lesson-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 48px; align-items: start; }
+.lesson-aside { position: sticky; top: 24px; display: grid; gap: 16px; }
+
+.panel { background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--radius-m); padding: 18px; }
+.panel h2 { font-size: 17px; font-weight: 500; margin-bottom: 12px; }
+
+.task-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.task-item {
+  display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: center;
+  padding: 10px; border-radius: var(--radius-s); text-decoration: none; color: var(--text-2);
+}
+.task-item:hover { background: var(--bg); color: var(--text); }
+.task-item .icon { color: var(--text-3); }
+.task-item.solved { color: var(--text); }
+.task-item.solved .icon { color: var(--lime-text); }
+.task-item.started .icon { color: var(--amber); }
+
+.complete { display: grid; gap: 10px; }
+.complete .chip { justify-self: start; }
+
+.pager { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 48px; }
+.pager a {
+  display: grid; gap: 4px; padding: 16px 18px; border-radius: var(--radius-m);
+  border: 1px solid var(--line); text-decoration: none;
+}
+.pager a:hover { border-color: var(--line-strong); }
+.pager .dir { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-3); }
+.pager .next { text-align: right; grid-column: 2; }
+.pager .next .dir { justify-content: flex-end; }
+.pager .t { font-weight: 500; }
+
+@media (max-width: 1100px) {
+  .lesson-layout { grid-template-columns: 1fr; }
+  .lesson-aside { position: static; }
+}

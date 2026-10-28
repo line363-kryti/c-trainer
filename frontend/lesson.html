@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Урок — C-тренажёр</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/lesson.css">
+  <script>try { document.documentElement.dataset.theme = localStorage.getItem("theme") || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"); } catch {}</script>
+  <script src="/vendor/marked.min.js"></script>
+  <script src="/vendor/purify.min.js"></script>
+</head>
+<body>
+  <div class="shell">
+    <main class="main">
+      <div class="page">
+        <header class="lesson-head">
+          <span class="lesson-num" id="num"></span>
+          <h1 id="title">Загружаю урок</h1>
+          <p class="source" id="source"></p>
+        </header>
+
+        <div class="lesson-layout">
+          <article class="prose" id="body"></article>
+
+          <aside class="lesson-aside">
+            <section class="panel" aria-labelledby="tasks-title">
+              <h2 id="tasks-title">Задачи</h2>
+              <ol class="task-list" id="tasks"></ol>
+            </section>
+            <section class="panel complete" id="complete-box" hidden>
+              <span class="chip ok" id="done-chip" hidden></span>
+              <button class="btn" type="button" id="complete"></button>
+            </section>
+          </aside>
+        </div>
+
+        <nav class="pager" aria-label="Соседние уроки">
+          <a class="prev" id="prev" hidden></a>
+          <a class="next" id="next" hidden></a>
+        </nav>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { api } from "/js/api.js";
+    import { highlightAll } from "/js/highlight.js";
+    import { icon, initShell, lessonUrl, pad2, taskUrl } from "/js/shell.js";
+
+    const $ = (id) => document.getElementById(id);
+    const slug = new URLSearchParams(location.search).get("lesson") || "";
+    const base = `/api/lessons/${encodeURIComponent(slug)}`;
+
+    const { lessons } = await initShell({ active: slug });
+
+    let lesson;
+    try {
+      lesson = await api(base);
+    } catch (e) {
+      $("title").textContent = e.status === 404 ? "Урок не найден" : "Урок не загрузился";
+      $("body").textContent = e.status === 404 ? "Проверь ссылку или выбери урок в меню слева." : e.message;
+      throw e;
+    }
+
+    const index = lessons.findIndex((l) => l.slug === lesson.slug);
+    document.title = `${lesson.title} — C-тренажёр`;
+    $("num").textContent = index >= 0 ? `Урок ${pad2(index + 1)}` : "";
+    $("title").textContent = lesson.title;
+    $("source").textContent = lesson.source ? `По материалам: ${lesson.source}` : "";
+
+    // Теория — Markdown. DOMPurify вычищает из HTML всё опасное, потом подсвечиваем код
+    $("body").innerHTML = DOMPurify.sanitize(marked.parse(lesson.body));
+    highlightAll($("body"));
+
+    // Задачи: ✓ решена, ◔ начата, ◌ не открывалась
+    for (const t of lesson.tasks) {
+      const state = t.status === "solved" ? "solved" : t.status ? "started" : "";
+      const a = Object.assign(document.createElement("a"), { className: `task-item ${state}`, href: taskUrl(lesson.slug, t.slug) });
+      a.innerHTML = icon(state === "solved" ? "circle-check" : state ? "progress" : "circle-dashed");
+      a.append(Object.assign(document.createElement("span"), { textContent: t.title }));
+      a.title = state === "solved" ? "Решена" : state ? "Начата" : "Не начата";
+      const li = document.createElement("li");
+      li.append(a);
+      $("tasks").append(li);
+    }
+
+    // Отметка «урок пройден»
+    function renderComplete() {
+      $("complete-box").hidden = false;
+      $("done-chip").hidden = !lesson.completed;
+      $("done-chip").innerHTML = `${icon("checks", "icon-s")}Урок пройден`;
+      $("complete").textContent = lesson.completed ? "Снять отметку" : "Отметить урок пройденным";
+      $("complete").className = lesson.completed ? "btn btn-ghost" : "btn btn-primary";
+    }
+    renderComplete();
+    $("complete").onclick = async () => {
+      $("complete").setAttribute("aria-busy", "true");
+      try {
+        await api(`${base}/complete`, { method: lesson.completed ? "DELETE" : "POST" });
+        lesson.completed = !lesson.completed;
+        renderComplete();
+      } finally {
+        $("complete").removeAttribute("aria-busy");
+      }
+    };
+
+    // Соседние уроки
+    function fillPager(el, l, label, iconName, iconFirst) {
+      if (!l) return;
+      el.href = lessonUrl(l.slug);
+      const dir = Object.assign(document.createElement("span"), { className: "dir" });
+      dir.innerHTML = icon(iconName, "icon-s");
+      iconFirst ? dir.append(label) : dir.prepend(label);
+      el.append(dir, Object.assign(document.createElement("span"), { className: "t", textContent: l.title }));
+      el.hidden = false;
+    }
+    fillPager($("prev"), lesson.prev, "Предыдущий урок", "arrow-left", true);
+    fillPager($("next"), lesson.next, "Следующий урок", "arrow-right", false);
+  </script>
+</body>
+</html>

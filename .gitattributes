@@ -1,0 +1,8 @@
+# Текстовые файлы храним с переводом строки LF — так же, как их видит Linux в контейнерах
+* text=auto eol=lf
+
+# Двоичные файлы — без преобразований
+*.woff2 binary
+*.docx binary
+*.png binary
+*.jpg binary

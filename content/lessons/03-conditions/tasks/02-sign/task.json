@@ -1,0 +1,35 @@
+{
+  "title": "Знак числа",
+  "order": 2,
+  "hint": "Три варианта — это if, else if и else.",
+  "tests": [
+    {
+      "input": "5\n",
+      "output": "Positive\n"
+    },
+    {
+      "input": "-3\n",
+      "output": "Negative\n"
+    },
+    {
+      "input": "0\n",
+      "output": "Zero\n"
+    },
+    {
+      "input": "1\n",
+      "output": "Positive\n"
+    },
+    {
+      "input": "-1\n",
+      "output": "Negative\n"
+    },
+    {
+      "input": "2147483647\n",
+      "output": "Positive\n"
+    },
+    {
+      "input": "-2147483648\n",
+      "output": "Negative\n"
+    }
+  ]
+}

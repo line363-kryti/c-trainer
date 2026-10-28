@@ -1,0 +1,11 @@
+{
+  "title": "Три строки",
+  "order": 1,
+  "hint": "Каждая строка — отдельный printf, а в конце строки — \\n.",
+  "tests": [
+    {
+      "input": "",
+      "output": "Sergey\nI study at ITMO\nI am learning C\n"
+    }
+  ]
+}

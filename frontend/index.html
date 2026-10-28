@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C-тренажёр</title>
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/home.css">
+  <script>try { document.documentElement.dataset.theme = localStorage.getItem("theme") || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"); } catch {}</script>
+</head>
+<body>
+  <div class="shell">
+    <main class="main">
+      <section class="hero">
+        <svg class="ribbon" viewBox="0 0 600 600" aria-hidden="true">
+          <path d="M455.6 144.4A220 220 0 1 0 455.6 455.6" pathLength="1" stroke-dasharray="1"
+                fill="none" stroke="var(--lime)" stroke-width="118" stroke-linecap="round"/>
+        </svg>
+
+        <div class="hero-text">
+          <h1>Язык C<br>через практику</h1>
+          <p class="lead">Короткие уроки по лекциям и задачи, которые проверяются прямо здесь: пишешь код, он компилируется в песочнице и проходит тесты.</p>
+          <a class="btn btn-outline btn-big" id="continue" href="/">Загружаю…</a>
+          <ul class="stats" id="stats"></ul>
+        </div>
+
+        <a class="codewin" id="codewin" hidden>
+          <div class="codewin-head">
+            <span class="codewin-tab"><svg class="icon-s" aria-hidden="true"><use href="/img/icons.svg#i-file-code"></use></svg>main.c</span>
+            <span class="codewin-title" id="codewin-title"></span>
+          </div>
+          <div class="codewin-body">
+            <div class="codewin-lines" id="codewin-lines" aria-hidden="true"></div>
+            <pre class="codewin-code"><code id="codewin-code"></code></pre>
+          </div>
+          <div class="codewin-foot">
+            <span id="codewin-meta"></span>
+            <span class="go">Открыть задачу <svg class="icon-s" aria-hidden="true"><use href="/img/icons.svg#i-arrow-up-right"></use></svg></span>
+          </div>
+        </a>
+      </section>
+
+      <section class="lessons-sec" aria-labelledby="lessons-title">
+        <h2 id="lessons-title">Уроки</h2>
+        <ol class="lesson-grid" id="lessons"></ol>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import { api } from "/js/api.js";
+    import { highlightInto } from "/js/highlight.js";
+    import { icon, initShell, lessonUrl, pad2, segments, taskUrl } from "/js/shell.js";
+
+    const $ = (id) => document.getElementById(id);
+    const { lessons } = await initShell({ active: "home" });
+
+    // ---- статистика ----
+    const solved = lessons.reduce((s, l) => s + l.tasks_solved, 0);
+    const total = lessons.reduce((s, l) => s + l.tasks_total, 0);
+    const done = lessons.filter((l) => l.completed).length;
+    for (const [value, label] of [[`${solved}/${total}`, "задач решено"], [`${done}/${lessons.length}`, "уроков пройдено"]]) {
+      const li = document.createElement("li");
+      li.append(Object.assign(document.createElement("b"), { textContent: value }), label);
+      $("stats").append(li);
+    }
+
+    // ---- сетка уроков ----
+    lessons.forEach((l, i) => {
+      const a = Object.assign(document.createElement("a"), { className: `lesson-row${l.completed ? " done" : ""}`, href: lessonUrl(l.slug) });
+      const meta = Object.assign(document.createElement("span"), { className: "meta" });
+      meta.append(`решено ${l.tasks_solved} из ${l.tasks_total}`);
+      if (l.completed) meta.append(Object.assign(document.createElement("span"), { className: "chip ok", textContent: "пройден" }));
+      a.append(
+        Object.assign(document.createElement("span"), { className: "num", textContent: pad2(i + 1) }),
+        Object.assign(document.createElement("span"), { className: "title", textContent: l.title }),
+        segments(l.tasks_solved, l.tasks_total),
+        meta,
+      );
+      const li = document.createElement("li");
+      li.append(a);
+      $("lessons").append(li);
+    });
+
+    // ---- следующая нерешённая задача: кнопка «Продолжить» и окно кода ----
+    const cont = $("continue");
+    const nextLesson = lessons.find((l) => l.tasks_solved < l.tasks_total);
+    if (!nextLesson) {
+      cont.innerHTML = `Все задачи решены ${icon("checks")}`;
+      cont.href = lessons.length ? lessonUrl(lessons[0].slug) : "/";
+    } else {
+      const lesson = await api(`/api/lessons/${encodeURIComponent(nextLesson.slug)}`);
+      const next = lesson.tasks.find((t) => t.status !== "solved");
+      const task = await api(`/api/tasks/${encodeURIComponent(lesson.slug)}/${encodeURIComponent(next.slug)}`);
+      const url = taskUrl(lesson.slug, next.slug);
+
+      cont.href = url;
+      cont.textContent = solved ? `Продолжить: ${task.title}` : "Начать с первой задачи";
+      cont.insertAdjacentHTML("beforeend", icon("arrow-up-right"));
+
+      const code = task.code.replace(/\s+$/, "");
+      highlightInto($("codewin-code"), code);
+      $("codewin-lines").textContent = code.split("\n").map((_, i) => i + 1).join("\n");
+      $("codewin-title").textContent = task.title;
+      $("codewin-meta").textContent = `${lesson.title}, тестов: ${task.tests_count}`;
+      $("codewin").href = url;
+      $("codewin").hidden = false;
+    }
+  </script>
+</body>
+</html>

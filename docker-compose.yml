@@ -1,0 +1,56 @@
+name: c-trainer
+
+services:
+  db:
+    image: mirror.gcr.io/library/postgres:16   # зеркало Docker Hub от Google (сам Docker Hub не отвечает)
+    env_file: .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"   # база видна только с этого компьютера
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  piston:
+    # Движок запуска кода. Версия закреплена по digest, чтобы обновление образа ничего не сломало
+    image: ghcr.io/engineer-man/piston@sha256:2f66b7456189c4d713aa986d98eccd0b6ee16d26c7ec5f21b30e942756fd127a
+    privileged: true   # Piston сам изолирует каждую программу (cgroups), для этого нужны права
+    environment:
+      PISTON_RUN_TIMEOUT: 5000          # максимум «по часам» на запуск, мс (по умолчанию 3000)
+      PISTON_OUTPUT_MAX_SIZE: 65536     # максимум символов вывода (по умолчанию всего 1024)
+    tmpfs:
+      - /piston/jobs:exec,uid=1000,gid=1000,mode=711
+      - /tmp:exec
+    volumes:
+      - piston-packages:/piston/packages   # установленные компиляторы (gcc) сохраняются между запусками
+    ports:
+      - "127.0.0.1:2000:2000"   # только для отладки с этого компьютера
+
+  backend:
+    build:
+      context: .
+      args:
+        INSTALL_DEV: "true"   # локально нужны pytest и httpx
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      WATCHFILES_FORCE_POLLING: "true"   # чтобы --reload видел правки файлов из Windows
+    depends_on:
+      db:
+        condition: service_healthy
+      piston:
+        condition: service_started
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
+      - ./content:/app/content
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+volumes:
+  pgdata:
+  piston-packages:
