@@ -19,10 +19,11 @@
         </svg>
 
         <div class="hero-text">
-          <h1>Язык C<br>через практику</h1>
-          <p class="lead">Короткие уроки по лекциям и задачи, которые проверяются прямо здесь: пишешь код, он компилируется в песочнице и проходит тесты.</p>
-          <a class="btn btn-outline btn-big" id="continue" href="/">Загружаю…</a>
-          <ul class="stats" id="stats"></ul>
+          <!-- --i — очередь появления (см. home.css) -->
+          <h1 style="--i: 0">Язык C<br>через практику</h1>
+          <p class="lead" style="--i: 1">Короткие уроки по лекциям и задачи, которые проверяются прямо здесь: пишешь код, он компилируется в песочнице и проходит тесты.</p>
+          <a class="btn btn-outline btn-big" id="continue" href="/" style="--i: 2">Загружаю…</a>
+          <ul class="stats" id="stats" style="--i: 3"></ul>
         </div>
 
         <a class="codewin" id="codewin" hidden>
@@ -42,7 +43,7 @@
       </section>
 
       <section class="lessons-sec" aria-labelledby="lessons-title">
-        <h2 id="lessons-title">Уроки</h2>
+        <h2 id="lessons-title" style="--i: 5">Уроки</h2>
         <ol class="lesson-grid" id="lessons"></ol>
       </section>
     </main>
@@ -79,6 +80,7 @@
         meta,
       );
       const li = document.createElement("li");
+      li.style.setProperty("--i", 6 + i * 0.6); // уроки выезжают следом за заголовком, с небольшим шагом
       li.append(a);
       $("lessons").append(li);
     });
@@ -86,26 +88,32 @@
     // ---- следующая нерешённая задача: кнопка «Продолжить» и окно кода ----
     const cont = $("continue");
     const nextLesson = lessons.find((l) => l.tasks_solved < l.tasks_total);
-    if (!nextLesson) {
-      cont.innerHTML = `Все задачи решены ${icon("checks")}`;
-      cont.href = lessons.length ? lessonUrl(lessons[0].slug) : "/";
-    } else {
-      const lesson = await api(`/api/lessons/${encodeURIComponent(nextLesson.slug)}`);
-      const next = lesson.tasks.find((t) => t.status !== "solved");
-      const task = await api(`/api/tasks/${encodeURIComponent(lesson.slug)}/${encodeURIComponent(next.slug)}`);
-      const url = taskUrl(lesson.slug, next.slug);
+    try {
+      if (!nextLesson) {
+        cont.innerHTML = `Все задачи решены ${icon("checks")}`;
+        cont.href = lessons.length ? lessonUrl(lessons[0].slug) : "/";
+      } else {
+        const lesson = await api(`/api/lessons/${encodeURIComponent(nextLesson.slug)}`);
+        const next = lesson.tasks.find((t) => t.status !== "solved");
+        const task = await api(`/api/tasks/${encodeURIComponent(lesson.slug)}/${encodeURIComponent(next.slug)}`);
+        const url = taskUrl(lesson.slug, next.slug);
 
-      cont.href = url;
-      cont.textContent = solved ? `Продолжить: ${task.title}` : "Начать с первой задачи";
-      cont.insertAdjacentHTML("beforeend", icon("arrow-up-right"));
+        cont.href = url;
+        cont.textContent = solved ? `Продолжить: ${task.title}` : "Начать с первой задачи";
+        cont.insertAdjacentHTML("beforeend", icon("arrow-up-right"));
 
-      const code = task.code.replace(/\s+$/, "");
-      highlightInto($("codewin-code"), code);
-      $("codewin-lines").textContent = code.split("\n").map((_, i) => i + 1).join("\n");
-      $("codewin-title").textContent = task.title;
-      $("codewin-meta").textContent = `${lesson.title}, тестов: ${task.tests_count}`;
-      $("codewin").href = url;
-      $("codewin").hidden = false;
+        const code = task.code.replace(/\s+$/, "");
+        highlightInto($("codewin-code"), code);
+        $("codewin-lines").textContent = code.split("\n").map((_, i) => i + 1).join("\n");
+        $("codewin-title").textContent = task.title;
+        $("codewin-meta").textContent = `${lesson.title}, тестов: ${task.tests_count}`;
+        $("codewin").href = url;
+        $("codewin").hidden = false;
+      }
+    } finally {
+      // Всё на месте — запускаем общее появление (лента + текст + окно + уроки).
+      // В finally: даже если окно кода не загрузилось, страница не останется скрытой
+      document.querySelector(".main").classList.add("ready");
     }
   </script>
 </body>

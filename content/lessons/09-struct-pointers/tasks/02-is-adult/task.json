@@ -1,0 +1,27 @@
+{
+  "title": "Совершеннолетний студент",
+  "order": 2,
+  "hint": "Внутри функции: if (s->age >= 18) return 1; а в конце return 0;",
+  "tests": [
+    {
+      "input": "18\n",
+      "output": "Adult\n"
+    },
+    {
+      "input": "17\n",
+      "output": "Not adult\n"
+    },
+    {
+      "input": "0\n",
+      "output": "Not adult\n"
+    },
+    {
+      "input": "30\n",
+      "output": "Adult\n"
+    },
+    {
+      "input": "150\n",
+      "output": "Adult\n"
+    }
+  ]
+}
