@@ -1,0 +1,13 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Лабораторные — C-тренажёр</title><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="/css/base.css"><link rel="stylesheet" href="/css/labs.css"></head>
+<body><div class="shell"><main class="main labs-page"><h1>Лабораторные работы</h1>
+<p class="muted">Одна программа, несколько этапов. Работай самостоятельно или включи пошаговую помощь.</p>
+<p id="notice" role="status">Загружаю работы…</p><div id="list"></div></main></div>
+<script type="module">
+import {initShell} from '/js/shell.js'; import {api} from '/js/api.js';
+try { await initShell({active:'labs'}); const labs=await api('/api/labs');
+document.getElementById('notice').textContent=labs.length?'':'Лабораторные пока не добавлены. Здесь появятся задания преподавателя, этапы и проверка решений.';
+for(const lab of labs){const a=document.createElement('a');a.className='lab-card';a.href='/lab.html?lab='+encodeURIComponent(lab.slug);
+const title=document.createElement('h2');title.textContent=lab.title;const p=document.createElement('p');p.textContent=[lab.variant,lab.max_points ? 'До '+lab.max_points+' баллов' : '',lab.status].filter(Boolean).join(' · ');a.append(title,p);document.getElementById('list').append(a);}
+}catch(e){document.getElementById('notice').textContent=e.message;}
+</script></body></html>

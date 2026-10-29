@@ -10,8 +10,13 @@
   <script>try { document.documentElement.dataset.theme = localStorage.getItem("theme") || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"); } catch {}</script>
   <script src="/vendor/marked.min.js"></script>
   <script src="/vendor/purify.min.js"></script>
-  <!-- Monaco (~1 МБ) пока с CDN, версия закреплена -->
-  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
+  <!-- Загрузчик Monaco из проекта; сам редактор подтягивается в js/monaco-c.js -->
+  <script src="/vendor/monaco/vs/loader.js"></script>
+  <!-- Браузер начинает качать редактор сразу, ещё до загрузки задачи.
+       Стили редактора — обычной ссылкой: загрузчик Monaco видит её и второй раз не подключает
+       (а с rel="preload" он считал стили подключёнными, и они не применялись) -->
+  <link rel="preload" href="/vendor/monaco/vs/editor/editor.main.js" as="script">
+  <link rel="stylesheet" href="/vendor/monaco/vs/editor/editor.main.css">
 </head>
 <body>
   <div class="shell compact">

@@ -1,6 +1,9 @@
 # Секреты — никогда не коммитим
 .env
 
+# Резервные копии базы на сервере (deploy/backup.sh)
+backups/
+
 # Python
 __pycache__/
 *.pyc

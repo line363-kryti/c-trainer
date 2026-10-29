@@ -3,6 +3,7 @@
 
 # Двоичные файлы — без преобразований
 *.woff2 binary
+*.ttf binary
 *.docx binary
 *.png binary
 *.jpg binary

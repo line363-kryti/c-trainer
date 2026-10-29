@@ -1,0 +1,28 @@
+{
+  "title": "Скобки в макросе",
+  "order": 1,
+  "hint": "Нужны скобки вокруг каждого x и вокруг всего произведения.",
+  "template_must_compile": true,
+  "tests": [
+    {
+      "input": "5 2\n",
+      "output": "49\n"
+    },
+    {
+      "input": "0 0\n",
+      "output": "0\n"
+    },
+    {
+      "input": "-5 2\n",
+      "output": "9\n"
+    },
+    {
+      "input": "100 100\n",
+      "output": "40000\n"
+    },
+    {
+      "input": "-100 -100\n",
+      "output": "40000\n"
+    }
+  ]
+}

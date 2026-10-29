@@ -1,0 +1,11 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Лабораторная — C-тренажёр</title><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="/css/base.css"><link rel="stylesheet" href="/css/labs.css">
+<link rel="stylesheet" href="/vendor/monaco/vs/editor/editor.main.css"></head><body>
+<div class="shell"><main class="main labs-page"><a href="/labs.html">Все лабораторные</a><h1 id="title">Лабораторная работа</h1><p id="meta"></p>
+<p id="notice" role="status">Загружаю…</p><div id="work" hidden>
+<div class="lab-toolbar"><button id="mode" class="btn btn-outline" aria-expanded="true">Самостоятельно</button><span id="save" role="status"></span><button id="save-btn" class="btn btn-ghost">Сохранить</button><button id="download" class="btn btn-ghost">Скачать main.c</button></div>
+<div class="lab-layout"><section class="lab-statement"><h2>Задание</h2><div id="statement" class="prose"></div><details><summary>Подготовка к защите</summary><ul id="defense"></ul></details><label><input type="checkbox" id="defended"> Работа защищена</label></section>
+<section class="lab-editor"><div class="lab-toolbar"><span>main.c</span><button id="run" class="btn btn-outline">Запустить</button><button id="check" class="btn btn-primary">Проверить работу</button></div><div id="editor"></div>
+<label for="stdin">Ввод программы</label><textarea id="stdin" rows="3"></textarea><p id="verdict" role="status"></p><div id="results" aria-live="polite"></div></section>
+<aside id="steps"><h2>По шагам</h2><p class="muted">Этапы можно выполнять в любом порядке.</p><div id="stage-list"></div></aside></div></div></main></div>
+<script src="/vendor/marked.min.js"></script><script src="/vendor/purify.min.js"></script><script src="/vendor/monaco/vs/loader.js"></script><script type="module" src="/js/lab.js"></script></body></html>

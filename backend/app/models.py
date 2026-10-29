@@ -63,3 +63,12 @@ class Submission(Base):
     passed: Mapped[int] = mapped_column(Integer)
     total: Mapped[int] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class LabProgress(Base):
+    """Отдельный прогресс лабораторных, не влияет на счётчики уроков."""
+    __tablename__ = "lab_progress"
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    lab_slug: Mapped[str] = mapped_column(String(100), primary_key=True)
+    code: Mapped[str] = mapped_column(Text)
+    state: Mapped[str] = mapped_column(Text, default="{}")

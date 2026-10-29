@@ -1,0 +1,75 @@
+# Запуск на сервере: docker compose -f docker-compose.prod.yml up -d --build
+# Отличия от docker-compose.yml (локального):
+#   - наружу открыт только Caddy (порты 80 и 443, https); база, Piston и бэкенд — только внутри Docker;
+#   - без режима разработки: нет --reload, нет pytest в образе, код вшит в образ (а не подключён папкой);
+#   - контейнеры сами перезапускаются после сбоя или перезагрузки сервера.
+name: c-trainer
+
+services:
+  db:
+    image: mirror.gcr.io/library/postgres:16
+    env_file: .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  piston:
+    image: ghcr.io/engineer-man/piston@sha256:2f66b7456189c4d713aa986d98eccd0b6ee16d26c7ec5f21b30e942756fd127a
+    privileged: true
+    environment:
+      PISTON_RUN_TIMEOUT: 5000
+      PISTON_OUTPUT_MAX_SIZE: 65536
+    tmpfs:
+      - /piston/jobs:exec,uid=1000,gid=1000,mode=711
+      - /tmp:exec
+    volumes:
+      - piston-packages:/piston/packages
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      args:
+        INSTALL_DEV: "false"
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      COOKIE_SECURE: "true"   # сайт работает по https — cookie со входом только по https
+    depends_on:
+      db:
+        condition: service_healthy
+      piston:
+        condition: service_started
+    # --proxy-headers: настоящий IP посетителя берётся из заголовка Caddy (для лимитов).
+    # Доверять можно всем, потому что до бэкенда снаружи не достучаться — только через Caddy.
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"
+    restart: unless-stopped
+
+  caddy:
+    image: mirror.gcr.io/library/caddy:2.8.4
+    environment:
+      DOMAIN: ${DOMAIN:?Впиши DOMAIN в .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data          # https-сертификаты — чтобы не запрашивать их заново
+      - caddy-config:/config
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  piston-packages:
+  caddy-data:
+  caddy-config:

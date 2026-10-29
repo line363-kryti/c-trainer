@@ -26,15 +26,19 @@ const STATUS_TEXT = {
 let editor;
 let task;
 let saveTimer;
+let outputSnapshot = null;
 
 init().catch(showFatal);
 
 async function init() {
+  // Редактор грузим сразу и параллельно с меню и задачей — не ждём их
+  const monacoReady = loadMonaco();
+
   await initShell({ active: lessonSlug });
   task = await api(base);
   renderTask();
 
-  const monaco = await loadMonaco();
+  const monaco = await monacoReady;
   $("editor").replaceChildren(); // убираем надпись «Загружаю редактор…»
   editor = monaco.editor.create($("editor"), {
     value: task.code,
@@ -57,7 +61,8 @@ async function init() {
   // Горячие клавиши в дополнение к стандартным VS Code (Ctrl+F, Ctrl+H, Alt+клик — несколько курсоров…)
   editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, runCode);
   editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Enter, checkCode);
-  editor.onDidChangeModelContent(scheduleSave);
+  editor.onDidChangeModelContent(() => { scheduleSave(); updateOutputFreshness(); });
+  $("stdin").addEventListener("input", updateOutputFreshness);
   window.addEventListener("themechange", (e) => monaco.editor.setTheme(monacoTheme(e.detail)));
 
   $("run-btn").onclick = runCode;
@@ -122,8 +127,9 @@ async function withBusy(button, fn) {
   button.setAttribute("aria-busy", "true");
   clearTimeout(saveTimer); // run/check сохраняют код сами
   try {
+    const submittedCode = editor.getValue();
     await fn();
-    $("save-state").textContent = "сохранено";
+    $("save-state").textContent = editor.getValue() === submittedCode ? "сохранено" : "изменено";
   } catch (e) {
     showOutput(verdict(false, e.message));
   } finally {
@@ -133,21 +139,48 @@ async function withBusy(button, fn) {
 
 function runCode() {
   return withBusy($("run-btn"), async () => {
+    const code = editor.getValue(), stdin = $("stdin").value;
+    outputSnapshot = null;
     showOutput(el("p", { className: "empty", textContent: "Компилирую и запускаю…" }));
-    const r = await api(`${base}/run`, { method: "POST", body: { code: editor.getValue(), stdin: $("stdin").value } });
+    const r = await api(`${base}/run`, { method: "POST", body: { code, stdin } });
     renderRun(r);
+    const inputDetails = el("details", { className: "run-input" },
+      el("summary", { textContent: "Ввод этого запуска" }), block(stdin));
+    $("output").append(inputDetails);
+    rememberOutput({ code, stdin });
   });
 }
 
 function checkCode() {
   return withBusy($("check-btn"), async () => {
+    const code = editor.getValue();
+    outputSnapshot = null;
     showOutput(el("p", { className: "empty", textContent: `Проверяю на ${task.tests_count} тестах…` }));
-    const r = await api(`${base}/check`, { method: "POST", body: { code: editor.getValue() } });
+    const r = await api(`${base}/check`, { method: "POST", body: { code } });
     renderCheck(r);
+    rememberOutput({ code });
     task.attempts += 1;
     if (r.solved) task.status = "solved";
     renderStatus();
   });
+}
+
+// Результат относится к конкретному коду и вводу, а не ко всему содержимому редактора.
+function rememberOutput(snapshot) {
+  outputSnapshot = snapshot;
+  $("output").prepend(el("p", { id: "output-stale", className: "output-stale", hidden: true, role: "status" }));
+  updateOutputFreshness();
+}
+
+function updateOutputFreshness() {
+  const notice = $("output-stale");
+  if (!editor || !outputSnapshot || !notice) return;
+  const changedCode = editor.getValue() !== outputSnapshot.code;
+  const changedInput = outputSnapshot.stdin !== undefined && $("stdin").value !== outputSnapshot.stdin;
+  notice.hidden = !changedCode && !changedInput;
+  notice.textContent = changedCode || changedInput
+    ? "Результат устарел: " + (changedCode ? "код изменён" : "ввод изменён") + ". Запусти программу или проверку заново."
+    : "";
 }
 
 // ---------- вывод результатов (только textContent — без риска XSS) ----------
@@ -175,12 +208,12 @@ function verdict(ok, text, stats = "") {
 }
 
 function renderRun(r) {
-  const stats = r.time !== null ? `${r.time.toFixed(3)} с, ${r.memory} КБ` : "";
+  const stats = [r.time != null ? `${r.time.toFixed(3)} с` : "", r.memory != null ? `${r.memory} КБ` : ""].filter(Boolean).join(", ");
   showOutput(
     verdict(r.status === "ok", STATUS_TEXT[r.status], stats),
     r.message ? el("p", { textContent: r.message }) : null,
     r.compile_output ? labelled("Компилятор", block(r.compile_output)) : null,
-    r.status !== "compile_error" ? labelled("Вывод программы", block(r.stdout)) : null,
+    r.status !== "compile_error" ? labelled("Вывод программы", block(r.stdout ?? "")) : null,
     r.stderr ? labelled("stderr", block(r.stderr)) : null,
   );
 }

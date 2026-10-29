@@ -1,18 +1,10 @@
-// Подключение Monaco (движок редактора VS Code) с CDN и подсказки для языка C.
+// Подключение Monaco (движок редактора VS Code) и подсказки для языка C.
+// Monaco 0.52.2 лежит в проекте (frontend/vendor/monaco) — только нужные файлы: ядро,
+// подсветка C, фоновый поток, иконки и русский перевод интерфейса. CDN и сеть не нужны.
 // Подсветку C Monaco умеет сам; автодополнение добавляем своё: ключевые слова,
 // частые функции стандартной библиотеки и сниппеты (шаблоны кода с переходом по Tab).
 
-const MONACO_BASE = "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min";
-
-// Monaco запускает фоновые потоки (web workers). С чужого домена браузер их не пустит,
-// поэтому создаём поток-прослойку, который сам подгружает код с CDN.
-window.MonacoEnvironment = {
-  getWorkerUrl() {
-    const src = `self.MonacoEnvironment = { baseUrl: "${MONACO_BASE}/" };
-importScripts("${MONACO_BASE}/vs/base/worker/workerMain.js");`;
-    return `data:text/javascript;charset=utf-8,${encodeURIComponent(src)}`;
-  },
-};
+const MONACO_BASE = "/vendor/monaco";
 
 const KEYWORDS = [
   "auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum",
@@ -121,14 +113,21 @@ function registerCompletions(monaco) {
   });
 }
 
-// Загружает Monaco и возвращает объект monaco (один раз)
+let loading = null;
+
+// Загружает Monaco и возвращает объект monaco. Можно вызывать сколько угодно раз —
+// загрузка начнётся при первом вызове, остальные получат тот же результат.
 export function loadMonaco() {
-  return new Promise((resolve, reject) => {
+  loading ??= new Promise((resolve, reject) => {
     window.require.config({ paths: { vs: `${MONACO_BASE}/vs` } });
-    window.require(["vs/editor/editor.main"], () => {
-      registerCompletions(window.monaco);
-      defineThemes(window.monaco);
-      resolve(window.monaco);
+    // Сначала русский перевод интерфейса («Найти», «Заменить»…), потом сам редактор
+    window.require(["vs/nls.messages.ru"], () => {
+      window.require(["vs/editor/editor.main"], () => {
+        registerCompletions(window.monaco);
+        defineThemes(window.monaco);
+        resolve(window.monaco);
+      }, reject);
     }, reject);
   });
+  return loading;
 }

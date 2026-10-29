@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.db import get_db
 from app.limiter import limiter, rate_limit_handler
-from app.routers import auth, lessons, run, tasks
+from app.routers import auth, lessons, run, tasks, labs
 
 app = FastAPI(title="C-тренажёр", docs_url="/api/docs", openapi_url="/api/openapi.json")
 app.state.limiter = limiter
@@ -33,6 +33,7 @@ app.include_router(auth.router)
 app.include_router(run.router)
 app.include_router(tasks.router)
 app.include_router(lessons.router)
+app.include_router(labs.router)
 
 
 @app.get("/api/health")
@@ -47,6 +48,7 @@ def health(db: Session = Depends(get_db)) -> dict:
 
 # В slim-образе Python нет системной таблицы типов — шрифты отдавались бы как text/plain
 mimetypes.add_type("font/woff2", ".woff2")
+mimetypes.add_type("font/ttf", ".ttf")  # иконки Monaco
 
 # Фронтенд подключаем последним, чтобы он не перехватывал адреса /api
 app.mount("/", StaticFiles(directory=settings.frontend_dir, html=True), name="frontend")

@@ -59,6 +59,8 @@ export async function initShell({ active = null } = {}) {
     <a class="brand" href="/">${BRAND_MARK}<span class="brand-name">C-тренажёр</span></a>
     <a class="nav-link" href="/" ${active === "home" ? 'aria-current="page"' : ""} title="Главная">
       ${icon("home")}<span class="label">Главная</span></a>
+    <a class="nav-link" href="/labs.html" ${active === "labs" ? 'aria-current="page"' : ""} title="Лабораторные работы">
+      ${icon("file-code")}<span class="label">Лабораторные</span></a>
     <div class="nav-section">Уроки</div>
     <ol class="nav-lessons"></ol>
     <div class="nav-foot">

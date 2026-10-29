@@ -1,0 +1,15 @@
+# Caddy — «входная дверь» сайта: принимает запросы из интернета на 80/443 порту,
+# сам получает и продлевает https-сертификат Let's Encrypt для домена из .env (DOMAIN)
+# и передаёт запросы бэкенду внутри Docker.
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy backend:8000
+
+	header {
+		# браузер всегда ходит на сайт только по https
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}
